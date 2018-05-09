@@ -10,7 +10,6 @@ class ConfigurationParser(object):
         self.parser = self.create_parser()
 
     def run(self):
-        self.create_parser()
         result = self.parser.parse_args()
         return result
 

@@ -51,24 +51,34 @@ class HtmlGenerator:
         print('md file:', file)
         destination_directory = self._get_destination_directory(file)
         print('destination directory:', destination_directory)
+        os.makedirs(destination_directory, mode=0o755, exist_ok=True)
         transformed_document = md_transformer.MdTransformer(file, destination_directory, self._template).run()
-        print('destination file:', os.path.join(destination_directory, os.path.basename(file)))
+        raw_basename = os.path.splitext(os.path.basename(file))[0]
+        destination_path = os.path.join(destination_directory, raw_basename + '.html')
+        print('destination path:', destination_path)
+        pathlib.Path(destination_path).write_text(transformed_document, encoding='UTF-8')
 
     def _get_destination_directory(self, file):
         if not os.path.isfile(file):
             raise ValueError('Not a file [' + file + ']')
-        return self._get_destination_path(os.path.dirname(file))
+        return self._get_destination_directory_path(os.path.dirname(file))
 
     def _copy_image_files(self):
         for file in self._image_files:
             self._copy_image_file(file)
 
     def _copy_image_file(self, file):
-        destination_path = self._get_destination_path(file)
+        destination_path = self._get_destination_file(file)
         print('Copying [', file, '] to [', destination_path, ']', sep='')
         shutil.copy(file, destination_path)
 
-    def _get_destination_path(self, file):
+    def _get_destination_directory_path(self, file):
+        destination_path = self._get_output_path(file)
+        if os.path.exists(destination_path) and not os.path.isdir(destination_path):
+            raise ValueError('Destination path is not a file: ' + destination_path)
+        return destination_path
+
+    def _get_destination_file(self, file):
         destination_path = self._get_output_path(file)
         if os.path.exists(destination_path) and not os.path.isfile(destination_path):
             raise ValueError('Destination path is not a file: ' + destination_path)
@@ -82,6 +92,6 @@ class HtmlGenerator:
 
 def _safe_relative_path(path, base_path):
     result = os.path.relpath(path, base_path)
-    if os.path.join(base_path, result) != path:
-        raise ValueError('Path [' + path + '] is not a sub path of base path [' + base_path + ']')
+    if path != base_path and os.path.join(base_path, result) != path:
+        raise ValueError('Path [' + path + '] is not a sub path of base path [' + base_path + '] - joined: [' + joined + ']')
     return result
