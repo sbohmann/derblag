@@ -1,4 +1,7 @@
 import os
+import shutil
+import pathlib
+import md_transformer
 
 
 class HtmlGenerator:
@@ -6,10 +9,17 @@ class HtmlGenerator:
         self._configuration = configuration
         self._md_files = []
         self._image_files = []
+        self._template = self._read_template()
+        print('source directory:', configuration.source_directory)
+        print('destination directory:', configuration.destination_directory)
+
+    def _read_template(self):
+        return pathlib.Path('template.html').read_text(encoding='UTF-8')
 
     def run(self):
         self._walk_source_directory()
         self._transform_md_files()
+
         self._copy_image_files()
 
     def _walk_source_directory(self):
@@ -35,8 +45,43 @@ class HtmlGenerator:
 
     def _transform_md_files(self):
         for file in self._md_files:
-            print('md file:', file)
+            self._transform_md_file(file)
+
+    def _transform_md_file(self, file):
+        print('md file:', file)
+        destination_directory = self._get_destination_directory(file)
+        print('destination directory:', destination_directory)
+        transformed_document = md_transformer.MdTransformer(file, destination_directory, self._template).run()
+        print('destination file:', os.path.join(destination_directory, os.path.basename(file)))
+
+    def _get_destination_directory(self, file):
+        if not os.path.isfile(file):
+            raise ValueError('Not a file [' + file + ']')
+        return self._get_destination_path(os.path.dirname(file))
 
     def _copy_image_files(self):
         for file in self._image_files:
-            print('image file:', file)
+            self._copy_image_file(file)
+
+    def _copy_image_file(self, file):
+        destination_path = self._get_destination_path(file)
+        print('Copying [', file, '] to [', destination_path, ']', sep='')
+        shutil.copy(file, destination_path)
+
+    def _get_destination_path(self, file):
+        destination_path = self._get_output_path(file)
+        if os.path.exists(destination_path) and not os.path.isfile(destination_path):
+            raise ValueError('Destination path is not a file: ' + destination_path)
+        return destination_path
+
+    def _get_output_path(self, file):
+        relative_path = _safe_relative_path(file, self._configuration.source_directory)
+        destination_path = os.path.join(self._configuration.destination_directory, relative_path)
+        return destination_path
+
+
+def _safe_relative_path(path, base_path):
+    result = os.path.relpath(path, base_path)
+    if os.path.join(base_path, result) != path:
+        raise ValueError('Path [' + path + '] is not a sub path of base path [' + base_path + ']')
+    return result
