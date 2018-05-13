@@ -26,15 +26,15 @@ def print_number(n):
 def print_words(n):
     found_word = False
     for (key, word) in word_for_number.items():
-        found_word = handle_word(found_word, key, word, n)
+        found_word |= handle_word(key, word, n)
     return found_word
 
 
-def handle_word(found_word, key, word, n):
+def handle_word(key, word, n):
     if n % key == 0:
         print_word(word)
-        found_word = True
-    return found_word
+        return True
+    return False
 
 
 def print_word(word):
@@ -42,4 +42,3 @@ def print_word(word):
 
 
 run()
-
