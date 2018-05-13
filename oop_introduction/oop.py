@@ -26,17 +26,15 @@ class NumberPrinter:
             print(self.n)
 
     def _print_words(self):
-        for item in word_for_number.items():
-            self._handle_word(item)
+        for (key, word) in word_for_number.items():
+            self._handle_word(key, word)
 
-    def _handle_word(self, item):
-        key = item[0]
+    def _handle_word(self, key, word):
         if self.n % key == 0:
-            self._print_word(item)
+            self._print_word(word)
             self.found_word = True
 
-    def _print_word(self, item):
-        word = item[1]
+    def _print_word(self, word):
         print(word, end='')
 
 

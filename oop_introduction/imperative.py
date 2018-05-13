@@ -11,11 +11,9 @@ maximum = 100
 
 for n in range(1, maximum):
     found_word = False
-    for item in word_for_number.items():
-        key = item[0]
+    for (key, word) in word_for_number.items():
         if n % key == 0:
             found_word = True
-            word = item[1]
             print(word, end='')
     if found_word:
         print()
